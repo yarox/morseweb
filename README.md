@@ -40,7 +40,7 @@ Open a browser and point it to where your server is running, e.g. `example-serve
 # Exporting Blender Files
 Call the script `utils/export.py` from Blender:
 ```
-$ BLENDER_USER_SCRIPTS=blender_scripts blender_scripts blender -b --addons io_three -P utils/export.py -- args
+$ BLENDER_USER_SCRIPTS=blender_scripts blender -b --addons io_three -P utils/export.py -- args
 ```
 
 Expected arguments are:
