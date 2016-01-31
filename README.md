@@ -3,7 +3,7 @@ morseweb
 A web client for the Modular OpenRobots Simulation Engine (MORSE)
 
 # Dependencies
-+ MORSE **1.2.2**
++ MORSE **1.3**
 + crossbar.io with Autobahn (for websockets related stuff)
 + Xvfb and LLVMpipe (for launching MORSE in headless mode)
 
@@ -11,6 +11,11 @@ A web client for the Modular OpenRobots Simulation Engine (MORSE)
 Follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to enable MORSE in "headless" mode.
 
 # Launching the Simulation
+First, import the `examplesim` simulation into MORSE:
+```
+$ morse import examplesim
+```
+
 ## Regular Mode
 Open two terminals. In the first one run:
 ```
