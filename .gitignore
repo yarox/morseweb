@@ -58,6 +58,9 @@ target/
 # IPython
 .ipynb_checkpoints/
 
+# crossbar.io
+node.key
+
 # OSX
 .DS_Store
 .AppleDouble
