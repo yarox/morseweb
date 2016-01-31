@@ -60,5 +60,5 @@ class ExtraServices(morse.core.sensor.Sensor):
         """
         Update elapsed time.
         """
-        self.local_data['realitime'] = time.time() * 1000.0
+        self.local_data['realitime'] = time.time()
         self.local_data['simtime'] = self.local_data['timestamp']

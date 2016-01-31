@@ -165,8 +165,8 @@ function onTime(args, kwargs, details) {
   var pRealTime = document.querySelector(".time .real");
   var pSimTime = document.querySelector(".time .simulation");
 
-  var real = moment.duration(moment(args[0].realitime) - startTime);
-  var sim = moment.duration(moment(args[0].simtime) - startTime);
+  var real = moment.duration(moment.unix(args[0].realitime) - startTime);
+  var sim = moment.duration(moment.unix(args[0].simtime) - startTime);
 
   pRealTime.innerHTML = `Real Time: ${real.format(format, options)}`;
   pSimTime.innerHTML = `Simulation Time: ${sim.format(format, options)}`;
