@@ -19,7 +19,8 @@ $ morse import examplesim
 ## Regular Mode
 Open two terminals. In the first one run:
 ```
-$ morse run examplesim
+$ multinode_server &
+$ morse run --name nodeA examplesim
 ```
 And in the second one:
 ```
@@ -30,7 +31,8 @@ $ crossbar start --cbdir morseweb/.crossbar
 Open two terminals. In the first one run:
 ```
 $ Xvfb -screen 0 100x100x24 :1 &
-$ LD_LIBRARY_PATH=/path/to/mesa-11.0.7/build/linux-x86_64/gallium/targets/libgl-xlib DISPLAY=:1 morse run examplesim
+$ multinode_server &
+$ LD_LIBRARY_PATH=/path/to/mesa-11.0.7/build/linux-x86_64/gallium/targets/libgl-xlib DISPLAY=:1 morse run --name nodeA examplesim
 ```
 And in the second one:
 ```
@@ -54,7 +56,8 @@ Expected arguments are:
 + `--out_directory`, `-o`: Output destination <sup id="a2">[2](#f2)</sup>
 
 # Caveats
-+ Simulated robots need to have a `Pose` sensor attached, so morseweb can track their positions.
++ morseweb depends on [multi-node](http://www.openrobots.org/morse/doc/stable/multinode.html)
+ mode of MORSE to track the state of the simulation.
 + There has to be a `FakeRobot` instance with an `ExtraServices` sensor attached in the simulation, so morseweb can call the services it needs to work properly.
 + Only one material per mesh is allowed in the models (see discussion [here](https://github.com/mrdoob/three.js/issues/6731#issuecomment-115308900)).
 + Use [these](http://i.imgur.com/upu855O.png) settings when exporting Blender models to Three.js format **from the GUI**.
