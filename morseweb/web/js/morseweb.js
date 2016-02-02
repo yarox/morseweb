@@ -1,8 +1,10 @@
+"use strict";
+
 
 var container = document.getElementById("container"),
     robots = {},
     wsuri,
-    camera, scene, renderer, controls,
+    camera, scene, light, renderer, controls,
     sceneInfo, startTime;
 
 if (document.location.origin == "file://") {
@@ -29,7 +31,7 @@ connection.onopen = function(session, details) {
       // Subscribe to simulation elapsed time
       session.subscribe("com.simulation.time", onTime).then(
         function(sub) {
-          console.log("subscribed to time");
+          console.log("subscribed to topic", "com.simulation.time");
         },
         function(err) {
           console.log("failed to subscribe to topic", err);
@@ -48,9 +50,9 @@ connection.onopen = function(session, details) {
       sceneInfo = res;
 
       // Subscribe to each robot position
-      session.subscribe("com..pose", onPose, { match: "wildcard" }).then(
+      session.subscribe("com.robots.pose", onPose).then(
         function(sub) {
-          console.log("subscribed to topic");
+          console.log("subscribed to topic", "com.robots.pose");
 
           init();
           animate();
@@ -162,8 +164,8 @@ function onTime(args, kwargs, details) {
   var options = {forceLength: true, trim: false};
   var format = 'dd:hh:mm:ss';
 
-  var pRealTime = document.querySelector(".time .real");
-  var pSimTime = document.querySelector(".time .simulation");
+  var pRealTime = document.getElementById("realtime");
+  var pSimTime = document.getElementById("simtime");
 
   var real = moment.duration(moment.unix(args[0].realitime) - startTime);
   var sim = moment.duration(moment.unix(args[0].simtime) - startTime);
@@ -173,18 +175,19 @@ function onTime(args, kwargs, details) {
 }
 
 function onPose(args, kwargs, details) {
-  var robot = robots[kwargs.name];
-  updateRobotPosition(robot, args[0]);
+  for (var name in args[0]) {
+    updateRobotPosition(robots[name], args[0][name]);
+  }
 }
 
 function updateRobotPosition(robot, data) {
   // Blender and three.js have different coordinate systems, so we have to make
   // some adjustments in order to move the objects properly.
-  robot.position.x = -data.x;
-  robot.position.y = data.z;
-  robot.position.z = data.y;
+  robot.position.x = -data[0][0]; // x
+  robot.position.y = data[0][2];  // z
+  robot.position.z = data[0][1];  // y
 
-  robot.rotation.x = data.roll;
-  robot.rotation.y = data.yaw;
-  robot.rotation.z = data.pitch;
+  robot.rotation.x = data[1][0];  // roll
+  robot.rotation.y = data[1][2];  // yaw
+  robot.rotation.z = data[1][1];  // pitch
 }
