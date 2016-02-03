@@ -32,7 +32,9 @@ Open two terminals. In the first one run:
 ```
 $ Xvfb -screen 0 100x100x24 :1 &
 $ multinode_server &
-$ LD_LIBRARY_PATH=/path/to/mesa-11.0.7/build/linux-x86_64/gallium/targets/libgl-xlib DISPLAY=:1 morse run --name nodeA examplesim
+$ export LD_LIBRARY_PATH=/path/to/mesa-11.0.7/build/linux-x86_64/gallium/targets/libgl-xlib
+$ export DISPLAY=:1
+$ morse run --name nodeA examplesim
 ```
 And in the second one:
 ```
