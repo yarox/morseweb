@@ -18,12 +18,12 @@ robot.add_default_interface("socket")
 # + <id> defined in case there are multiple copies of the same object
 # + <model>.json should exist in the models directory
 table0 = PassiveObject("props/objects", "SmallTable")
-table0.translate(1, 1, 0)
-table0.rotate(z=0.2)
+table0.translate(2, 2, 0)
+table0.rotate(z=0)
 table0.name = "table_0_passive"
 
 table1 = PassiveObject("props/objects", "SmallTable")
-table1.translate(2, 2, 0)
+table1.translate(-2, -2, 0)
 table1.rotate(z=0.7)
 table1.name = "table_1_passive"
 
