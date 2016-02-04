@@ -8,7 +8,7 @@ A web client for the Modular OpenRobots Simulation Engine (MORSE)
 + Xvfb and LLVMpipe (for launching MORSE in headless mode)
 
 # Instalation
-Follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to enable MORSE in "headless" mode.
+Clone the repo wherever you want. Follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
 
 # Launching the Simulation
 First, import the `examplesim` simulation into MORSE:
@@ -42,9 +42,9 @@ $ crossbar start --cbdir morseweb/.crossbar
 ```
 
 # Watching the Simulation
-Open a browser and point it to where your server is running, e.g. `example-server.com:8080`. You should see the `empty` environment with an `ATVR` robot standing in the middle.
+Open a browser and point it to where your server is running, e.g. `example-server.com:8080`. You should see the `empty` environment with an `ATVR` robot and two `SmallTable` objects.
 
-![Image of an example simulation](http://i.imgur.com/aAkIpAx.png)
+![Image of an example simulation](http://i.imgur.com/NXsbjrW.png)
 
 # Exporting Blender Files
 Call the script `utils/export.py` from Blender:
@@ -56,6 +56,18 @@ Expected arguments are:
 + `--blend_file`, `-f`: Blender file to export <sup id="a1">[1](#f1)</sup>
 + `--in_directory`, `-i`: Export all Blender files from this directory <sup id="a1">[1](#f1)</sup>
 + `--out_directory`, `-o`: Output destination <sup id="a2">[2](#f2)</sup>
+
+# Loading Passive Objects
+At the moment, if you want to load passive objects into a scene, you should name your objects as follows: `object.name = "<model>_<id>_passive"`
++ `<model>.json` should exist in the `morseweb/web/models` directory.
++ `<id>` in case there are multiple copies of the same object.
+
+```
+table = PassiveObject("props/objects", "SmallTable")
+table.name = "table_0_passive"
+table.translate(2, 2, 0)
+table.rotate(z=0.7)
+```
 
 # Caveats
 + morseweb depends on [multi-node](http://www.openrobots.org/morse/doc/stable/multinode.html)

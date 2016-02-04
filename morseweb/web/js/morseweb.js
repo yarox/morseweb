@@ -129,14 +129,26 @@ function init() {
 
     scene.add(object);
 
-    // Load the robots from the simulation
-    sceneInfo.robots.forEach(function(robot) {
-      var robotModel = `models/${robot.model}.json`;
+    // Load items from the simulation
+    sceneInfo.items.forEach(function(item) {
+      var itemModel = `models/${item.model}.json`;
 
-      loader.load(robotModel, function(object) {
-        console.log("robot loaded", object);
-        robots[robot.name] = object;
+      loader.load(itemModel, function(object) {
+        console.log("object loaded", object);
         scene.add(object);
+
+        if (item.type === "robot") {
+          robots[item.name] = object;
+        } else if (item.type === "passive") {
+          var quaternion = new THREE.Quaternion(item.rotation[0],
+                                                item.rotation[1],
+                                                item.rotation[2],
+                                                item.rotation[3]);
+          var rotation = new THREE.Euler().setFromQuaternion(quaternion);
+
+          item.rotation = [rotation.x, rotation.y, rotation.z];
+          updateObject(object, item.position, item.rotation);
+        }
       });
     });
   });
@@ -175,19 +187,29 @@ function onTime(args, kwargs, details) {
 }
 
 function onPose(args, kwargs, details) {
+  var position, rotation;
+
   for (var name in args[0]) {
-    updateRobotPosition(robots[name], args[0][name]);
+    position = args[0][name][0];
+    rotation = args[0][name][1];
+
+    updateObject(robots[name], position, rotation);
   }
 }
 
-function updateRobotPosition(robot, data) {
+function updateObject(object, position, rotation) {
   // Blender and three.js have different coordinate systems, so we have to make
   // some adjustments in order to move the objects properly.
-  robot.position.x = -data[0][0]; // x
-  robot.position.y = data[0][2];  // z
-  robot.position.z = data[0][1];  // y
 
-  robot.rotation.x = data[1][0];  // roll
-  robot.rotation.y = data[1][2];  // yaw
-  robot.rotation.z = data[1][1];  // pitch
+  if (position !== undefined) {
+    object.position.x = -position[0]; // x
+    object.position.y = position[2];  // z
+    object.position.z = position[1];  // y
+  }
+
+  if (rotation !== undefined) {
+    object.rotation.x = rotation[0];  // roll
+    object.rotation.y = rotation[2];  // yaw
+    object.rotation.z = rotation[1];  // pitch
+  }
 }

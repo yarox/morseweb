@@ -30,8 +30,21 @@ class AppSession(ApplicationSession):
             robots = self.simu.rpc("simulation", "details")["robots"]
 
             return [{"name": robot["name"],
-                     "model": robot["type"].lower()}
+                     "model": robot["type"].lower(),
+                     "position": None,
+                     "rotation": None,
+                     "type": "robot"}
                     for robot in robots if robot["type"].lower() != "fakerobot"]
+
+        def get_passive_objects():
+            objects = self.simu.rpc("simulation", "get_scene_objects")
+
+            return [{"name": k.rsplit("_", 1)[0],
+                     "model": k.split("_", 1)[0],
+                     "position": v[1],
+                     "rotation": v[2],
+                     "type": "passive"}
+                    for k, v in objects.items() if k.endswith("_passive")]
 
         def get_start_time():
             return self.simu.rpc("fakerobot.extra", "get_start_time")
@@ -39,11 +52,10 @@ class AppSession(ApplicationSession):
         def get_scene():
             cx, cy, cz = self.simu.rpc("fakerobot.extra", "get_camera_position")
             environment = self.simu.rpc("fakerobot.extra", "get_environment")
-            robots = get_robots()
 
             return {"camera_position": {"x": cx, "y": cy, "z": cz},
                     "environment": environment,
-                    "robots": robots}
+                    "items": get_robots() + get_passive_objects()}
 
         self.publish_stream()
 
