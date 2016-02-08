@@ -9,6 +9,7 @@ from pymorse import Morse
 
 from json.decoder import JSONDecodeError
 from functools import partial
+from os.path import basename, splitext
 
 
 class AppSession(ApplicationSession):
@@ -52,6 +53,7 @@ class AppSession(ApplicationSession):
         def get_scene():
             cx, cy, cz = self.simu.rpc("fakerobot.extra", "get_camera_position")
             environment = self.simu.rpc("fakerobot.extra", "get_environment")
+            environment = basename(splitext(environment)[0])
 
             return {"camera_position": {"x": cx, "y": cy, "z": cz},
                     "environment": environment,
