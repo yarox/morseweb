@@ -1,12 +1,11 @@
 #! /usr/bin/env morseexec
 
-from examplesim.builder.sensors import ExtraServices
 from morse.builder import *
 
 
 # Create a robot
 robot = ATRV()
-robot.translate(0, 0, 0)
+robot.translate(1, 1, 0)
 
 motion = MotionVW()
 robot.append(motion)
@@ -27,21 +26,17 @@ table1.translate(-2, -2, 0)
 table1.rotate(z=0.7)
 table1.name = "table_1_passive"
 
-# Create a fake robot holding the simulator extra services for morseweb
-fakerobot = FakeRobot()
-extra = ExtraServices()
-fakerobot.append(extra)
-fakerobot.add_default_interface("socket")
-
 # Configure the environment
 env = Environment("empty", fastmode=True)
 env.set_camera_location([0, 10, 15])
 
+# morseweb needs "use_relative_time" and "configure_multinode" to work
+env.use_relative_time(True)
 env.configure_multinode(
     protocol = "socket",
     server_address = "localhost",
     server_port = "65000",
-    distribution = {"nodeA": [robot.name, fakerobot.name]}
+    distribution = {"nodeA": [robot.name]}
 )
 
 env.create()

@@ -8,22 +8,19 @@ from pymorse.stream import StreamJSON, PollThread
 from pymorse import Morse
 
 from json.decoder import JSONDecodeError
-from functools import partial
 from os.path import basename, splitext
 
 
 class AppSession(ApplicationSession):
+    node_stream = StreamJSON("localhost", 65000)
     poll_thread = PollThread()
-    streams = []
 
     simu = Morse()
     log = Logger()
 
     def onDisconnect(self):
-        for stream in self.streams:
-            stream.close()
-
         self.poll_thread.syncstop()
+        self.node_stream.close()
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -35,7 +32,7 @@ class AppSession(ApplicationSession):
                      "position": None,
                      "rotation": None,
                      "type": "robot"}
-                    for robot in robots if robot["type"].lower() != "fakerobot"]
+                    for robot in robots]
 
         def get_passive_objects():
             objects = self.simu.rpc("simulation", "get_scene_objects")
@@ -47,12 +44,9 @@ class AppSession(ApplicationSession):
                      "type": "passive"}
                     for k, v in objects.items() if k.endswith("_passive")]
 
-        def get_start_time():
-            return self.simu.rpc("fakerobot.extra", "get_start_time")
-
         def get_scene():
-            cx, cy, cz = self.simu.rpc("fakerobot.extra", "get_camera_position")
-            environment = self.simu.rpc("fakerobot.extra", "get_environment")
+            cx, cy, cz = self.simu.rpc("simulation", "get_camarafp_position")
+            environment = self.simu.rpc("simulation", "details")["environment"]
             environment = basename(splitext(environment)[0])
 
             return {"camera_position": {"x": cx, "y": cy, "z": cz},
@@ -61,47 +55,26 @@ class AppSession(ApplicationSession):
 
         self.publish_stream()
 
-        reg1 = yield self.register(get_start_time, "com.simulation.get_start_time")
-        reg2 = yield self.register(get_scene, "com.simulation.get_scene")
+        reg = yield self.register(get_scene, "com.simulation.get_scene")
 
     @inlineCallbacks
     def publish_stream(self):
-        pose_stream_port = 65000
-        time_stream_port = self.simu.rpc("simulation", "get_stream_port",
-                                         "fakerobot.extra")
-
-        pose_stream = StreamJSON("localhost", pose_stream_port)
-        time_stream = StreamJSON("localhost", time_stream_port)
-
-        self.streams = ([pose_stream, time_stream])
+        time_data = {"simtime": 0, "realtime": 0}
         self.poll_thread.start()
 
-        while all(stream.is_up() for stream in self.streams):
-            # Get pose information
-            pose_stream.publish(["morseweb", {}])
+        while self.node_stream.is_up():
+            self.node_stream.publish(["morseweb", {}])
 
             try:
-                pose_data = (pose_stream.get(timeout=1e-3) or
-                             pose_stream.last())
-            except JSONDecodeError as e:
-                self.log.warn("pose_data {exception}", exception=e)
-                pose_data = {}
-
-            try:
-                del pose_data["fakerobot"]
-            except KeyError:
+                data = (self.node_stream.get(timeout=1e-3) or
+                        self.node_stream.last() or {})
+            except JSONDecodeError:
                 pass
+            else:
+                (time_data["simtime"], _,
+                 time_data["realtime"]) = data.pop("__time", [0, 0, 0])
 
-            # Get time information
-            try:
-                time_data = (time_stream.get(timeout=1e-3) or
-                             time_stream.last())
-            except JSONDecodeError as e:
-                self.log.warn("time_data {exception}", exception=e)
-                time_data = {}
-
-            # Publish data to each topic
-            self.publish("com.simulation.time", time_data)
-            self.publish("com.robots.pose", pose_data)
+                self.publish("com.simulation.time", time_data)
+                self.publish("com.robots.pose", data)
 
             yield sleep(1e-2)
