@@ -178,7 +178,7 @@ function onTime(args, kwargs, details) {
 function onPose(args, kwargs, details) {
   var position, rotation;
 
-  for (var name in args[0]) {
+  for (var name in robots) {
     position = args[0][name][0];
     rotation = args[0][name][1];
 

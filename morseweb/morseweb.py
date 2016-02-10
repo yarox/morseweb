@@ -8,7 +8,6 @@ from pymorse.stream import StreamJSON, PollThread
 from pymorse import Morse
 
 from json.decoder import JSONDecodeError
-from functools import partial
 from os.path import basename, splitext
 
 
@@ -56,21 +55,26 @@ class AppSession(ApplicationSession):
 
         self.publish_stream()
 
-        reg1 = yield self.register(get_scene, "com.simulation.get_scene")
+        reg = yield self.register(get_scene, "com.simulation.get_scene")
 
     @inlineCallbacks
     def publish_stream(self):
         time_data = {"simtime": 0, "realtime": 0}
-
         self.poll_thread.start()
 
         while self.node_stream.is_up():
             self.node_stream.publish(["morseweb", {}])
-            data = self.node_stream.get(timeout=1e-3) or self.node_stream.last()
 
-            time_data["simtime"], _, time_data["realtime"] = data.pop("__time")
+            try:
+                data = (self.node_stream.get(timeout=1e-3) or
+                        self.node_stream.last() or {})
+            except JSONDecodeError:
+                pass
+            else:
+                (time_data["simtime"], _,
+                 time_data["realtime"]) = data.pop("__time", [0, 0, 0])
 
-            self.publish("com.simulation.time", time_data)
-            self.publish("com.robots.pose", data)
+                self.publish("com.simulation.time", time_data)
+                self.publish("com.robots.pose", data)
 
             yield sleep(1e-2)
