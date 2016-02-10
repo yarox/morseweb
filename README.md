@@ -72,7 +72,7 @@ table.rotate(z=0.7)
 # Caveats
 + morseweb depends on [multi-node](http://www.openrobots.org/morse/doc/stable/multinode.html)
  mode of MORSE to track the state of the simulation.
-+ Only one material per mesh is allowed in the models (see discussion [here](https://github.com/mrdoob/three.js/issues/6731#issuecomment-115308900)).
++ Only one material per mesh is allowed in the models (see discussion [here](https://github.com/mrdoob/three.js/issues/6731#issuecomment-115308900)). But this should be fixed in future releases (see [this](https://github.com/mrdoob/three.js/pull/8087) and [this](https://github.com/mrdoob/three.js/pull/8068)).
 + Use [these](http://i.imgur.com/upu855O.png) settings when exporting Blender models to Three.js format **from the GUI**.
 
 # Resources
