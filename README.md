@@ -1,6 +1,6 @@
 morseweb
 ========
-A web client for the Modular OpenRobots Simulation Engine (MORSE)
+morseweb is a WebGL client for [MORSE](https://www.openrobots.org/morse/doc/stable/morse.html). It's a front-end graphical interface to the simulator and provides visualization of the simulation from a web browser. This means cross-platform support (including mobile devices) and minimal client-side dependencies.
 
 # Dependencies
 + [MORSE](https://www.openrobots.org/morse/doc/stable/user/installation.html#manual-installation) **1.4**
@@ -8,7 +8,9 @@ A web client for the Modular OpenRobots Simulation Engine (MORSE)
 + Xvfb and LLVMpipe (for launching MORSE in headless mode)
 
 # Instalation
-Clone the repo wherever you want. Follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
+morseweb is installed on the server-side. Once the server is set up and running, clients can watch the simulation by accessing the server's URL on a web browser.
+
+Clone the repo wherever you want, and follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
 
 # Launching the Simulation
 First, import the `examplesim` simulation into MORSE:
@@ -78,6 +80,7 @@ table.rotate(z=0.7)
 # Resources
 + https://github.com/morse-simulator/morse/issues/623
 + http://threejs.org
++ http://gazebosim.org/gzweb
 
 <b id="f1">1</b> `--blend_file` and `--in_directory` are mutually exclusive. [↩](#a1)<br>
 <b id="f2">2</b> Current directory if not set. [↩](#a2)
