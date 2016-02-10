@@ -3,7 +3,7 @@ morseweb
 A web client for the Modular OpenRobots Simulation Engine (MORSE)
 
 # Dependencies
-+ MORSE **1.3**
++ [MORSE](https://www.openrobots.org/morse/doc/stable/user/installation.html#manual-installation) **1.4**
 + crossbar.io with Autobahn (for websockets related stuff)
 + Xvfb and LLVMpipe (for launching MORSE in headless mode)
 
@@ -72,12 +72,10 @@ table.rotate(z=0.7)
 # Caveats
 + morseweb depends on [multi-node](http://www.openrobots.org/morse/doc/stable/multinode.html)
  mode of MORSE to track the state of the simulation.
-+ There has to be a `FakeRobot` instance with an `ExtraServices` sensor attached in the simulation, so morseweb can call the services it needs to work properly.
 + Only one material per mesh is allowed in the models (see discussion [here](https://github.com/mrdoob/three.js/issues/6731#issuecomment-115308900)).
 + Use [these](http://i.imgur.com/upu855O.png) settings when exporting Blender models to Three.js format **from the GUI**.
 
 # Resources
-+ https://www.openrobots.org/morse/doc/latest/headless.html
 + https://github.com/morse-simulator/morse/issues/623
 + http://threejs.org
 
