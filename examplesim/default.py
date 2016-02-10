@@ -1,12 +1,11 @@
 #! /usr/bin/env morseexec
 
-from examplesim.builder.sensors import ExtraServices
 from morse.builder import *
 
 
 # Create a robot
 robot = ATRV()
-robot.translate(5, 0, 0)
+robot.translate(1, 1, 0)
 
 motion = MotionVW()
 robot.append(motion)
