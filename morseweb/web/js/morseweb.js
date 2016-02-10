@@ -22,24 +22,13 @@ var connection = new autobahn.Connection({
 connection.onopen = function(session, details) {
   console.log("Connected");
 
-  // Get simulation start time
-  session.call("com.simulation.get_start_time").then(
-    function(res) {
-      console.log("get_start_time() result:", res);
-      startTime = moment.unix(res);
-
-      // Subscribe to simulation elapsed time
-      session.subscribe("com.simulation.time", onTime).then(
-        function(sub) {
-          console.log("subscribed to topic", "com.simulation.time");
-        },
-        function(err) {
-          console.log("failed to subscribe to topic", err);
-        }
-      );
+  // Subscribe to simulation time services
+  session.subscribe("com.simulation.time", onTime).then(
+    function(sub) {
+      console.log("subscribed to topic", "com.simulation.time");
     },
     function(err) {
-      console.log("get_start_time() error:", err);
+      console.log("failed to subscribe to topic", err);
     }
   );
 
@@ -179,8 +168,8 @@ function onTime(args, kwargs, details) {
   var pRealTime = document.getElementById("realtime");
   var pSimTime = document.getElementById("simtime");
 
-  var real = moment.duration(moment.unix(args[0].realitime) - startTime);
-  var sim = moment.duration(moment.unix(args[0].simtime) - startTime);
+  var real = moment.duration(args[0].realtime * 1000);
+  var sim = moment.duration(args[0].simtime * 1000);
 
   pRealTime.innerHTML = `Real Time: ${real.format(format, options)}`;
   pSimTime.innerHTML = `Simulation Time: ${sim.format(format, options)}`;
