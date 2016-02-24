@@ -191,19 +191,6 @@ function updateObject(object, position, rotation) {
   // Blender and three.js have different coordinate systems, so we have to make
   // some adjustments in order to move the objects properly.
 
-  // TODO
-  // object.position.set(-position[0], position[2], position[1]);
-  // object.rotation.set(rotation[0], rotation[2], rotation[1]);
-
-  if (position !== undefined) {
-    object.position.x = -position[0]; // x
-    object.position.y = position[2];  // z
-    object.position.z = position[1];  // y
-  }
-
-  if (rotation !== undefined) {
-    object.rotation.x = rotation[0];  // roll
-    object.rotation.y = rotation[2];  // yaw
-    object.rotation.z = rotation[1];  // pitch
-  }
+  object.position.set(-position[0], position[2], position[1]);
+  object.rotation.set(rotation[0], rotation[2], rotation[1]);
 }
