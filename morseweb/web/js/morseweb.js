@@ -2,10 +2,17 @@
 
 
 var container = document.getElementById("container"),
-    robots = {},
-    wsuri,
+    pRealTime = document.getElementById("realtime"),
+    pSimTime = document.getElementById("simtime"),
+
+    timeOptions = {forceLength: true, trim: false},
+    timeFormat = 'dd:hh:mm:ss',
+
     camera, scene, light, renderer, controls,
-    sceneInfo, startTime;
+    sceneInfo,
+    wsuri,
+    robots = {};
+
 
 if (document.location.origin == "file://") {
   wsuri = "ws://127.0.0.1:8080/ws";
@@ -162,17 +169,11 @@ function render() {
 }
 
 function onTime(args, kwargs, details) {
-  var options = {forceLength: true, trim: false};
-  var format = 'dd:hh:mm:ss';
-
-  var pRealTime = document.getElementById("realtime");
-  var pSimTime = document.getElementById("simtime");
-
   var real = moment.duration(args[0].realtime * 1000);
   var sim = moment.duration(args[0].simtime * 1000);
 
-  pRealTime.innerHTML = `Real Time: ${real.format(format, options)}`;
-  pSimTime.innerHTML = `Simulation Time: ${sim.format(format, options)}`;
+  pRealTime.textContent = real.format(timeFormat, timeOptions);
+  pSimTime.textContent = sim.format(timeFormat, timeOptions);
 }
 
 function onPose(args, kwargs, details) {
@@ -189,6 +190,10 @@ function onPose(args, kwargs, details) {
 function updateObject(object, position, rotation) {
   // Blender and three.js have different coordinate systems, so we have to make
   // some adjustments in order to move the objects properly.
+
+  // TODO
+  // object.position.set(-position[0], position[2], position[1]);
+  // object.rotation.set(rotation[0], rotation[2], rotation[1]);
 
   if (position !== undefined) {
     object.position.x = -position[0]; // x
