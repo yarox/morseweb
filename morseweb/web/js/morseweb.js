@@ -136,14 +136,9 @@ function init() {
         if (item.type === "robot") {
           robots[item.name] = object;
         } else if (item.type === "passive") {
-          var quaternion = new THREE.Quaternion(item.rotation[0],
-                                                item.rotation[1],
-                                                item.rotation[2],
-                                                item.rotation[3]);
-          var rotation = new THREE.Euler().setFromQuaternion(quaternion);
-
-          item.rotation = [rotation.x, rotation.y, rotation.z];
-          updateObject(object, item.position, item.rotation);
+          updateObject(object, item.position, quaternionToEuler(item.rotation));
+        } else {
+          console.log("Unknown object", item.type);
         }
       });
     });
@@ -166,6 +161,13 @@ function animate() {
 
 function render() {
   renderer.render(scene, camera);
+}
+
+function quaternionToEuler(items) {
+  var quaternion = new THREE.Quaternion(...items),
+      rotation = new THREE.Euler().setFromQuaternion(quaternion);
+
+  return [rotation.x, rotation.y, rotation.z];
 }
 
 function onTime(args, kwargs, details) {
