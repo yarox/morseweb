@@ -135,15 +135,16 @@ function init() {
         scene.add(object);
 
         if (item.type === "robot") {
-          // robots[item.name] = object;
           robotNames.push(item.name);
           robots.push(object)
-
         } else if (item.type === "passive") {
-          updateObject(object, item.position, quaternionToEuler(item.rotation));
+          item.rotation = quaternionToEuler(item.rotation)
         } else {
           console.log("Unknown object", item.type);
+          return;
         }
+
+        updateObject(object, item.position, item.rotation);
       });
     });
   });
