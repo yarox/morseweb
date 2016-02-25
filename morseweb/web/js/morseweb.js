@@ -8,10 +8,11 @@ var container = document.getElementById("container"),
     timeOptions = {forceLength: true, trim: false},
     timeFormat = 'dd:hh:mm:ss',
 
+    robotNames = [], robots = [],
+
     camera, scene, light, renderer, controls,
     sceneInfo,
-    wsuri,
-    robots = {};
+    wsuri;
 
 
 if (document.location.origin == "file://") {
@@ -134,7 +135,10 @@ function init() {
         scene.add(object);
 
         if (item.type === "robot") {
-          robots[item.name] = object;
+          // robots[item.name] = object;
+          robotNames.push(item.name);
+          robots.push(object)
+
         } else if (item.type === "passive") {
           updateObject(object, item.position, quaternionToEuler(item.rotation));
         } else {
@@ -181,11 +185,13 @@ function onTime(args, kwargs, details) {
 function onPose(args, kwargs, details) {
   var position, rotation;
 
-  for (var name in robots) {
+  for (var name, i = 0; i < robots.length; i++) {
+    name = robotNames[i];
+
     position = args[0][name][0];
     rotation = args[0][name][1];
 
-    updateObject(robots[name], position, rotation);
+    updateObject(robots[i], position, rotation);
   }
 }
 
