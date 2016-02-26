@@ -61,7 +61,6 @@ class AppSession(ApplicationSession):
 
     @inlineCallbacks
     def publish_stream(self):
-        time_data = {"simtime": 0, "realtime": 0}
         self.poll_thread.start()
 
         while self.node_stream.is_up():
@@ -69,14 +68,10 @@ class AppSession(ApplicationSession):
 
             try:
                 data = (self.node_stream.get(timeout=1e-3) or
-                        self.node_stream.last() or {})
+                        self.node_stream.last())
             except JSONDecodeError:
                 pass
             else:
-                (time_data["simtime"], _,
-                 time_data["realtime"]) = data.pop("__time", [0, 0, 0])
-
-                self.publish("com.simulation.time", time_data)
-                self.publish("com.robots.pose", data)
+                self.publish("com.simulation.update", data)
 
             yield sleep(1e-2)

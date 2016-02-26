@@ -30,26 +30,16 @@ var connection = new autobahn.Connection({
 connection.onopen = function(session, details) {
   console.log("Connected");
 
-  // Subscribe to simulation time services
-  session.subscribe("com.simulation.time", onTime).then(
-    function(sub) {
-      console.log("subscribed to topic", "com.simulation.time");
-    },
-    function(err) {
-      console.log("failed to subscribe to topic", err);
-    }
-  );
-
   // Get scene elements
   session.call("com.simulation.get_scene").then(
     function(res) {
       console.log("get_scene() result:", res);
       sceneInfo = res;
 
-      // Subscribe to each robot position
-      session.subscribe("com.robots.pose", onPose).then(
+      // Subscribe to simulation updates
+      session.subscribe("com.simulation.update", onUpdate).then(
         function(sub) {
-          console.log("subscribed to topic", "com.robots.pose");
+          console.log("subscribed to topic", "com.simulation.update");
 
           init();
           animate();
@@ -66,7 +56,7 @@ connection.onopen = function(session, details) {
 };
 
 connection.onclose = function(reason, details) {
-  console.log("Connection lost: " + reason);
+  console.log("Connection lost:", reason);
 }
 
 connection.open();
@@ -140,7 +130,7 @@ function init() {
         } else if (item.type === "passive") {
           item.rotation = quaternionToEuler(item.rotation)
         } else {
-          console.log("Unknown object", item.type);
+          console.warn("Unknown object", item);
           return;
         }
 
@@ -148,15 +138,6 @@ function init() {
       });
     });
   });
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  render();
 }
 
 function animate() {
@@ -168,31 +149,32 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function quaternionToEuler(items) {
-  var quaternion = new THREE.Quaternion(...items),
-      rotation = new THREE.Euler().setFromQuaternion(quaternion);
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 
-  return [rotation.x, rotation.y, rotation.z];
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  render();
 }
 
-function onTime(args, kwargs, details) {
-  var real = moment.duration(args[0].realtime * 1000);
-  var sim = moment.duration(args[0].simtime * 1000);
+function onUpdate(args, kwargs, details) {
+  updateTime(args[0]["__time"]);
+  updatePose(args[0]);
+}
+
+function updateTime(time) {
+  var real = moment.duration(time[2] * 1000);
+  var sim = moment.duration(time[0] * 1000);
 
   pRealTime.textContent = real.format(timeFormat, timeOptions);
   pSimTime.textContent = sim.format(timeFormat, timeOptions);
 }
 
-function onPose(args, kwargs, details) {
-  var position, rotation;
-
+function updatePose(poses) {
   for (var name, i = 0; i < robots.length; i++) {
     name = robotNames[i];
-
-    position = args[0][name][0];
-    rotation = args[0][name][1];
-
-    updateObject(robots[i], position, rotation);
+    updateObject(robots[i], poses[name][0], poses[name][1]);
   }
 }
 
@@ -202,4 +184,11 @@ function updateObject(object, position, rotation) {
 
   object.position.set(-position[0], position[2], position[1]);
   object.rotation.set(rotation[0], rotation[2], rotation[1]);
+}
+
+function quaternionToEuler(items) {
+  var quaternion = new THREE.Quaternion(...items),
+      rotation = new THREE.Euler().setFromQuaternion(quaternion);
+
+  return [rotation.x, rotation.y, rotation.z];
 }
