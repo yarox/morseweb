@@ -2,10 +2,19 @@
 
 
 var container = document.getElementById("container"),
-    robots = {},
-    wsuri,
+    pRealTime = document.getElementById("realtime"),
+    pSimTime = document.getElementById("simtime"),
+    pFactor = document.getElementById("factor"),
+
+    timeOptions = {forceLength: true, trim: false},
+    timeFormat = 'dd:hh:mm:ss',
+
+    robotNames = [], robots = [],
+
     camera, scene, light, renderer, controls,
-    sceneInfo, startTime;
+    sceneInfo,
+    wsuri;
+
 
 if (document.location.origin == "file://") {
   wsuri = "ws://127.0.0.1:8080/ws";
@@ -22,26 +31,16 @@ var connection = new autobahn.Connection({
 connection.onopen = function(session, details) {
   console.log("Connected");
 
-  // Subscribe to simulation time services
-  session.subscribe("com.simulation.time", onTime).then(
-    function(sub) {
-      console.log("subscribed to topic", "com.simulation.time");
-    },
-    function(err) {
-      console.log("failed to subscribe to topic", err);
-    }
-  );
-
   // Get scene elements
   session.call("com.simulation.get_scene").then(
     function(res) {
       console.log("get_scene() result:", res);
       sceneInfo = res;
 
-      // Subscribe to each robot position
-      session.subscribe("com.robots.pose", onPose).then(
+      // Subscribe to simulation updates
+      session.subscribe("com.simulation.update", onUpdate).then(
         function(sub) {
-          console.log("subscribed to topic", "com.robots.pose");
+          console.log("subscribed to topic", "com.simulation.update");
 
           init();
           animate();
@@ -58,7 +57,7 @@ connection.onopen = function(session, details) {
 };
 
 connection.onclose = function(reason, details) {
-  console.log("Connection lost: " + reason);
+  console.log("Connection lost:", reason);
 }
 
 connection.open();
@@ -127,29 +126,19 @@ function init() {
         scene.add(object);
 
         if (item.type === "robot") {
-          robots[item.name] = object;
+          robotNames.push(item.name);
+          robots.push(object)
         } else if (item.type === "passive") {
-          var quaternion = new THREE.Quaternion(item.rotation[0],
-                                                item.rotation[1],
-                                                item.rotation[2],
-                                                item.rotation[3]);
-          var rotation = new THREE.Euler().setFromQuaternion(quaternion);
-
-          item.rotation = [rotation.x, rotation.y, rotation.z];
-          updateObject(object, item.position, item.rotation);
+          item.rotation = quaternionToEuler(item.rotation)
+        } else {
+          console.warn("Unknown object", item);
+          return;
         }
+
+        updateObject(object, item.position, item.rotation);
       });
     });
   });
-}
-
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(window.innerWidth, window.innerHeight);
-
-  render();
 }
 
 function animate() {
@@ -161,28 +150,33 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function onTime(args, kwargs, details) {
-  var options = {forceLength: true, trim: false};
-  var format = 'dd:hh:mm:ss';
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 
-  var pRealTime = document.getElementById("realtime");
-  var pSimTime = document.getElementById("simtime");
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  var real = moment.duration(args[0].realtime * 1000);
-  var sim = moment.duration(args[0].simtime * 1000);
-
-  pRealTime.innerHTML = `Real Time: ${real.format(format, options)}`;
-  pSimTime.innerHTML = `Simulation Time: ${sim.format(format, options)}`;
+  render();
 }
 
-function onPose(args, kwargs, details) {
-  var position, rotation;
+function onUpdate(args, kwargs, details) {
+  updateTime(args[0]["__time"]);
+  updatePose(args[0]);
+}
 
-  for (var name in robots) {
-    position = args[0][name][0];
-    rotation = args[0][name][1];
+function updateTime(time) {
+  var real = moment.duration(time[2], "seconds");
+  var sim = moment.duration(time[0], "seconds");
 
-    updateObject(robots[name], position, rotation);
+  pRealTime.textContent = real.format(timeFormat, timeOptions);
+  pSimTime.textContent = sim.format(timeFormat, timeOptions);
+  pFactor.textContent = (time[0] / time[2]).toFixed(4);
+}
+
+function updatePose(poses) {
+  for (var name, i = 0; i < robots.length; i++) {
+    name = robotNames[i];
+    updateObject(robots[i], poses[name][0], poses[name][1]);
   }
 }
 
@@ -190,15 +184,13 @@ function updateObject(object, position, rotation) {
   // Blender and three.js have different coordinate systems, so we have to make
   // some adjustments in order to move the objects properly.
 
-  if (position !== undefined) {
-    object.position.x = -position[0]; // x
-    object.position.y = position[2];  // z
-    object.position.z = position[1];  // y
-  }
+  object.position.set(-position[0], position[2], position[1]);
+  object.rotation.set(rotation[0], rotation[2], rotation[1]);
+}
 
-  if (rotation !== undefined) {
-    object.rotation.x = rotation[0];  // roll
-    object.rotation.y = rotation[2];  // yaw
-    object.rotation.z = rotation[1];  // pitch
-  }
+function quaternionToEuler(items) {
+  var quaternion = new THREE.Quaternion(...items),
+      rotation = new THREE.Euler().setFromQuaternion(quaternion);
+
+  return [rotation.x, rotation.y, rotation.z];
 }
