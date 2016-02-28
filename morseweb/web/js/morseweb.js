@@ -4,6 +4,7 @@
 var container = document.getElementById("container"),
     pRealTime = document.getElementById("realtime"),
     pSimTime = document.getElementById("simtime"),
+    pFactor = document.getElementById("factor"),
 
     timeOptions = {forceLength: true, trim: false},
     timeFormat = 'dd:hh:mm:ss',
@@ -164,11 +165,12 @@ function onUpdate(args, kwargs, details) {
 }
 
 function updateTime(time) {
-  var real = moment.duration(time[2] * 1000);
-  var sim = moment.duration(time[0] * 1000);
+  var real = moment.duration(time[2], "seconds");
+  var sim = moment.duration(time[0], "seconds");
 
   pRealTime.textContent = real.format(timeFormat, timeOptions);
   pSimTime.textContent = sim.format(timeFormat, timeOptions);
+  pFactor.textContent = (time[0] / time[2]).toFixed(4);
 }
 
 function updatePose(poses) {
