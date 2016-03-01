@@ -82,3 +82,6 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+*.db
+morseweb/web/models/*
