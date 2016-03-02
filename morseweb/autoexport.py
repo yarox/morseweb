@@ -6,8 +6,8 @@ import logging
 import glob
 
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 
 MORSEWEB_ROOT = path.realpath(__file__).rsplit("morseweb", 1)[0]
@@ -19,7 +19,7 @@ RESOURCES = environ.get("MORSE_RESOURCE_PATH", "").split(":") + [MORSE_DATA]
 RESOURCES = [path.join(resource, "**/*.blend")
              for resource in RESOURCES if resource]
 
-EXPORT_COMMAND = "blender -b --addons io_three -P {} -- -f {} -o {}"
+EXPORT_COMMAND = "blender -b --addons io_three -P {} -- {} {}"
 EXPORT_SCRIPT = path.join(MORSEWEB_ROOT, "utils/export.py")
 
 DB = SqliteDatabase(path.join(MORSEWEB_ROOT, "blender-models.db"))
@@ -55,14 +55,19 @@ def populate(pathname, recursive=True):
 
 def export(model_names):
     environ["BLENDER_USER_SCRIPTS"] = path.join(MORSEWEB_ROOT, "blender_scripts")
+    models_to_export = []
 
     for obj in BlenderModel.select().where(BlenderModel.name << model_names):
         resource = path.join(MORSEWEB_DATA, obj.name + ".json")
 
         if (not path.isfile(resource)) or \
            (obj.last_update > path.getmtime(resource)):
-            subprocess.run(EXPORT_COMMAND.format(EXPORT_SCRIPT, obj.path,
-                                                 MORSEWEB_DATA), shell=True)
+            models_to_export.append(obj.path)
+
+    if models_to_export:
+        paths = " ".join(models_to_export)
+        command = EXPORT_COMMAND.format(EXPORT_SCRIPT, MORSEWEB_DATA, paths)
+        subprocess.run(command, shell=True)
 
 
 def init():

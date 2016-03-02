@@ -1,8 +1,11 @@
 from os.path import basename, splitext, join
 
-import argparse
-import glob
+import logging
 import sys
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def export_threejs(blend_file, json_file):
@@ -27,8 +30,12 @@ def export_threejs(blend_file, json_file):
                          option_uv_coords=True,
                          option_vertices=True,
                          option_normals=True,
-                         option_faces=True
-                        )
+                         option_faces=True)
+
+def usage():
+    msg = "usage: {} out_directory blend_file [blend_file ...]"
+    return msg.format(basename(sys.argv[0]))
+
 
 try:
     import bpy
@@ -39,34 +46,21 @@ except ImportError:
     export_threejs = print
 
 
-parser = argparse.ArgumentParser(description="Export Blender file to Three.js' \
-                                              JSON format.")
-group = parser.add_mutually_exclusive_group()
-group.add_argument("--blend_file", "-f", default="", type=str,
-                    help="Blender file to export")
-group.add_argument("--in_directory", "-i", default="", type=str,
-                    help="Export Blender files from this directory")
-parser.add_argument("--out_directory", "-o", default="", type=str,
-                    help="Output destination")
-
-
 if __name__ == "__main__":
     try:
-        args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
+        args = sys.argv[sys.argv.index("--") + 1:]
     except ValueError:
-        args = parser.parse_args()
+        args = sys.argv[1:]
 
-    if args.blend_file:
-        filename = basename(splitext(args.blend_file)[0])
-        json_file = join(args.out_directory, filename + ".json")
-        export_threejs(args.blend_file, json_file)
-
-    elif args.in_directory:
-        in_directory = join(args.in_directory, "*.blend")
-
-        for blend_file in glob.iglob(in_directory):
-            filename = basename(splitext(blend_file)[0])
-            json_file = join(args.out_directory, filename + ".json")
-            export_threejs(blend_file, json_file)
+    if len(args) >= 2:
+        out_directory = args[0]
+        blend_files = args[1:]
     else:
-        parser.print_help()
+        sys.exit(usage())
+
+    for blend_file in blend_files:
+        logger.info("Exporting '%s'...", blend_file)
+
+        filename = basename(splitext(blend_file)[0])
+        json_file = join(out_directory, filename + ".json")
+        export_threejs(blend_file, json_file)
