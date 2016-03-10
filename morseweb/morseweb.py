@@ -24,12 +24,22 @@ class AppSession(ApplicationSession):
         self.simu = Morse()
 
         self.poll_thread.start()
+        self.start()
         self.export_models()
 
     def onDisconnect(self):
         self.poll_thread.syncstop()
         self.node_stream.close()
         self.simu.close()
+
+    def start(self):
+        self.objects = self.simu.rpc("simulation", "get_scene_objects")
+        self.details = self.simu.rpc("simulation", "details")
+        self.robots = self.simu.rpc("simulation", "list_robots")
+
+        self.node_stream.publish(["morseweb", {}])
+        self.node_data = (self.node_stream.get(timeout=1e-3) or
+                          self.node_stream.last())
 
     @inlineCallbacks
     def onJoin(self, details):
@@ -53,43 +63,50 @@ class AppSession(ApplicationSession):
             yield sleep(1e-1)
 
     def get_robots(self):
-        self.node_stream.publish(["morseweb", {}])
+        robots = self.details["robots"]
 
-        robots = self.simu.rpc("simulation", "details")["robots"]
-        data = (self.node_stream.get(timeout=1e-3) or
-                self.node_stream.last())
-
-        foo = [{"name": robot["name"],
+        return [{"name": robot["name"],
                  "model": robot["type"].lower(),
-                 "position": data[robot["name"]][0],
-                 "rotation": data[robot["name"]][1],
+                 "position": self.node_data[robot["name"]][0],
+                 "rotation": self.node_data[robot["name"]][1],
                  "type": "robot"}
                 for robot in robots]
 
-        return foo
-
     def get_passive_objects(self):
-        objects = self.simu.rpc("simulation", "get_scene_objects")
-
-        return [{"name": k.rsplit("_", 1)[0],
-                 "model": k.split("_", 1)[0],
+        return [{"name": k,
+                 "model": k.split(".")[0].lower(),
                  "position": v[1],
                  "rotation": v[2],
                  "type": "passive"}
-                for k, v in objects.items() if k.endswith("_passive")]
+                for k, v in self.objects.items()
+                if k.split(".")[0].lower() in self.passive_object_names]
 
     def get_scene(self):
         cx, cy, cz = self.simu.rpc("simulation", "get_camarafp_position")
-        environment = self.simu.rpc("simulation", "details")["environment"]
-        environment = basename(splitext(environment)[0])
+        environment = basename(splitext(self.details["environment"])[0])
 
         return {"camera_position": {"x": cx, "y": cy, "z": cz},
                 "environment": environment,
                 "items": self.get_robots() + self.get_passive_objects()}
 
     def export_models(self):
-        scene = self.get_scene()
-        items = [item["model"] for item in scene["items"]]
+        self.log.info("Exporting models. This operation may take a while.")
+
+        robots = [r["type"].lower() for r in self.details["robots"]]
+        items = (set([k.split(".")[0].lower() for k in self.objects.keys()]) -
+                 set(self.robots))
+
+        model_names = robots + list(items)
+        environment = basename(splitext(self.details["environment"])[0])
+        scene = autoexport.BlenderModel.get(name=environment)
+
+        models = autoexport.BlenderModel.select().where(
+            (autoexport.BlenderModel.name << model_names) &
+            (autoexport.BlenderModel.path != scene.path))
+
+        self.passive_object_names = [model.name for model in list(models) + [scene]]
 
         autoexport.init()
-        autoexport.export(items + [scene["environment"]])
+        autoexport.export(self.passive_object_names)
+
+        self.log.info("Done exporting models.")
