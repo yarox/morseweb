@@ -1,5 +1,7 @@
 from os.path import basename, splitext, join
+from itertools import zip_longest
 
+import argparse
 import logging
 import sys
 
@@ -8,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def export_threejs(blend_file, json_file):
+def export_threejs(blend_file, json_file, object_name=None):
     # Clear any object present in Blender
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
@@ -16,9 +18,19 @@ def export_threejs(blend_file, json_file):
     # Load the Blender file to export
     bpy.ops.wm.open_mainfile(filepath=blend_file)
 
-    # We must set one active object for the exporter to work
-    obj = bpy.data.objects[0]
-    bpy.context.scene.objects.active = obj
+    if object_name is not None:
+        # Select the object and its children
+        bpy.ops.object.select_pattern(pattern=object_name, extend=False)
+        bpy.ops.object.select_hierarchy(direction="CHILD", extend=True)
+
+        # Invert the selection and delete everything but the object passed as a
+        # parameter
+        bpy.ops.object.select_all(action="INVERT")
+        bpy.ops.object.select_hierarchy(direction="CHILD", extend=True)
+        bpy.ops.object.delete(use_global=False)
+
+    # An object must be selected for the exporter to work
+    bpy.context.scene.objects.active = bpy.data.objects[0]
 
     # Call the three.js exporter
     bpy.ops.export.three(filepath=json_file,
@@ -46,21 +58,33 @@ except ImportError:
     export_threejs = print
 
 
+parser = argparse.ArgumentParser(description="Export Blender file to Three.js' \
+                                              JSON format.")
+
+parser.add_argument("blend_files", type=str, nargs="+",
+                    help="Blender files to export")
+parser.add_argument("--object_names", "-n", type=str, nargs="+", default=[],
+                    help="Objects to export")
+parser.add_argument("--out_directory", "-o", type=str, default="",
+                    help="Output destination")
+
+
 if __name__ == "__main__":
     try:
-        args = sys.argv[sys.argv.index("--") + 1:]
+        args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:])
     except ValueError:
-        args = sys.argv[1:]
+        args = parser.parse_args()
 
-    if len(args) >= 2:
-        out_directory = args[0]
-        blend_files = args[1:]
-    else:
-        sys.exit(usage())
+    for blend_file, object_name in zip_longest(args.blend_files, args.object_names):
+        logger.info("Exporting '%s' from '%s'...", object_name, blend_file)
 
-    for blend_file in blend_files:
-        logger.info("Exporting '%s'...", blend_file)
-
+        json_file = join(args.out_directory, object_name + ".json")
         filename = basename(splitext(blend_file)[0])
-        json_file = join(out_directory, filename + ".json")
-        export_threejs(blend_file, json_file)
+
+        if filename == object_name:
+            object_name = None
+
+        try:
+            export_threejs(blend_file, json_file, object_name)
+        except RuntimeError as e:
+            logger.warning(e)
