@@ -13,9 +13,14 @@ morseweb is installed on the server-side. Once the server is set up and running,
 Clone the repo wherever you want, and follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
 
 # Launching the Simulation
-First, import the `examplesim` simulation into MORSE:
+Import the `examplesim` simulation into MORSE
 ```
 $ morse import examplesim
+```
+and set the environment variables<sup id="a1">[1](#fn1)</sup> where MORSE will be looking for components:
+```
+$ export MORSE_ROOT="/usr"
+$ export MORSE_RESOURCE_PATH="/path/number/one:/path/number/two"
 ```
 
 ## Regular Mode
@@ -48,25 +53,12 @@ Open a browser and point it to where your server is running, e.g. `example-serve
 
 ![Image of an example simulation](http://i.imgur.com/NXsbjrW.png)
 
-# Exporting Blender Files
-Call the script `utils/export.py` from Blender:
-```
-$ BLENDER_USER_SCRIPTS=blender_scripts blender -b --addons io_three -P utils/export.py -- args
-```
-
-Expected arguments are:
-+ `--blend_file`, `-f`: Blender file to export <sup id="a1">[1](#f1)</sup>
-+ `--in_directory`, `-i`: Export all Blender files from this directory <sup id="a1">[1](#f1)</sup>
-+ `--out_directory`, `-o`: Output destination <sup id="a2">[2](#f2)</sup>
-
 # Loading Passive Objects
-At the moment, if you want to load passive objects into a scene, you should name your objects as follows: `object.name = "<model>_<id>_passive"`
-+ `<model>.json` should exist in the `morseweb/web/models` directory.
-+ `<id>` in case there are multiple copies of the same object.
+If you want to load passive objects into a scene you should set the name of the object exactly as the name of the model you're loading:
 
 ```
 table = PassiveObject("props/objects", "SmallTable")
-table.name = "table_0_passive"
+table.name = "SmallTable"
 table.translate(2, 2, 0)
 table.rotate(z=0.7)
 ```
@@ -75,12 +67,12 @@ table.rotate(z=0.7)
 + morseweb depends on [multi-node](http://www.openrobots.org/morse/doc/stable/multinode.html)
  mode of MORSE to track the state of the simulation.
 + Only one material per mesh is allowed in the models (see discussion [here](https://github.com/mrdoob/three.js/issues/6731#issuecomment-115308900)). But this should be fixed in future releases (see [this](https://github.com/mrdoob/three.js/pull/8087) and [this](https://github.com/mrdoob/three.js/pull/8068)).
-+ Use [these](http://i.imgur.com/upu855O.png) settings when exporting Blender models to Three.js format **from the GUI**.
 
 # Resources
 + https://github.com/morse-simulator/morse/issues/623
 + http://threejs.org
 + http://gazebosim.org/gzweb
 
-<b id="f1">1</b> `--blend_file` and `--in_directory` are mutually exclusive. [↩](#a1)<br>
-<b id="f2">2</b> Current directory if not set. [↩](#a2)
+---
+<b id="fn1">1</b> `MORSE_ROOT` may be different if you installed MORSE in a custom location. [&#8617;
+](#a1)<br>
