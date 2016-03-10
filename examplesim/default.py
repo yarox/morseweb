@@ -13,18 +13,17 @@ robot.append(motion)
 robot.add_default_interface("socket")
 
 # Load some passive objects
-# Passive object name convention: "<model>_<id>_passive"
-# + <id> defined in case there are multiple copies of the same object
-# + <model>.json should exist in the models directory
-table0 = PassiveObject("props/objects", "SmallTable")
-table0.translate(2, 2, 0)
-table0.rotate(z=0)
-table0.name = "table_0_passive"
+# NOTE: you should set the name of the object exactly as the name of the model
+# you're loading.
+obj0 = PassiveObject("props/objects", "SmallTable")
+obj0.translate(2, 2, 0)
+obj0.rotate(z=0)
+obj0.name = "SmallTable"
 
-table1 = PassiveObject("props/objects", "SmallTable")
-table1.translate(-2, -2, 0)
-table1.rotate(z=0.7)
-table1.name = "table_1_passive"
+obj1 = PassiveObject("props/objects", "SmallTable")
+obj1.translate(-2, -2, 0)
+obj1.rotate(z=0)
+obj1.name = "SmallTable"
 
 # Configure the environment
 env = Environment("empty", fastmode=True)
