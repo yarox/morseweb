@@ -91,6 +91,7 @@ class AppSession(ApplicationSession):
 
     def export_models(self):
         self.log.info("Exporting models. This operation may take a while.")
+        autoexport.init()
 
         robots = [r["type"].lower() for r in self.details["robots"]]
         items = (set([k.split(".")[0].lower() for k in self.objects.keys()]) -
@@ -105,8 +106,6 @@ class AppSession(ApplicationSession):
             (autoexport.BlenderModel.path != scene.path))
 
         self.passive_object_names = [model.name for model in list(models) + [scene]]
-
-        autoexport.init()
         autoexport.export(self.passive_object_names)
 
         self.log.info("Done exporting models.")
