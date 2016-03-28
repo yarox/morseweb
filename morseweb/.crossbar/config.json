@@ -2,6 +2,9 @@
    "workers": [
       {
          "type": "router",
+         "options": {
+            "pythonpath": [".."]
+         },
          "realms": [
             {
                "name": "realm1",
@@ -29,9 +32,10 @@
                   "port": 8080
                },
                "paths": {
-                  "/": {
-                     "type": "static",
-                     "directory": "../web"
+                  "/":{
+                    "type": "wsgi",
+                    "module": "webapp",
+                    "object": "app"
                   },
                   "ws": {
                      "type": "websocket"

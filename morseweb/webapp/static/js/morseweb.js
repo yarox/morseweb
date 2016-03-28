@@ -100,7 +100,7 @@ function init() {
 
   // Load the environment
   var loader = new THREE.ObjectLoader();
-  var environmentModel = `models/${sceneInfo.environment}.json`;
+  var environmentModel = `static/json/${sceneInfo.environment}.json`;
 
   loader.load(environmentModel, function(object) {
     console.log("environment loaded", object);
@@ -119,7 +119,7 @@ function init() {
 
     // Load items from the simulation
     sceneInfo.items.forEach(function(item) {
-      var itemModel = `models/${item.model}.json`;
+      var itemModel = `static/json/${item.model}.json`;
 
       loader.load(itemModel, function(object) {
         console.log("object loaded", object);
