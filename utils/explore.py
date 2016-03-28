@@ -10,8 +10,12 @@ logger = logging.getLogger(__name__)
 
 def list_objects(blend_file, same_prefix=True):
     # Clear any object present in Blender
-    bpy.ops.object.select_all(action="SELECT")
-    bpy.ops.object.delete(use_global=False)
+    try:
+        bpy.ops.object.select_all(action="SELECT")
+    except RuntimeError as e:
+        pass
+    else:
+        bpy.ops.object.delete(use_global=False)
 
     # Load the Blender file to export
     bpy.ops.wm.open_mainfile(filepath=blend_file)
@@ -34,7 +38,7 @@ def list_objects(blend_file, same_prefix=True):
     return objects
 
 def usage():
-    msg = "usage: {} same_prefix blend_file [blend_file ...]"
+    msg = "usage: {} blend_file [blend_file ...]"
     return msg.format(basename(sys.argv[0]))
 
 
@@ -60,4 +64,5 @@ if __name__ == "__main__":
 
     for blend_file in blend_files:
         for obj in list_objects(blend_file):
-            print("###", obj, blend_file, "$$$")
+            s = "### {} {} $$$".format(obj, blend_file)
+            print(s)
