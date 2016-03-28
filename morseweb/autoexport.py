@@ -43,6 +43,20 @@ class BlenderModel(Model):
         obj.last_update = last_update
         obj.save()
 
+    @classmethod
+    def get_models_from_names(cls, names):
+        return cls.select().where(cls.name << names)
+
+    @classmethod
+    def get_models_from_paths(cls, paths):
+        return cls.select().where(cls.path << paths)
+
+    @classmethod
+    def get_models_from_environment(cls, environment):
+        return cls.select().where((cls.path == environment.path) &
+                                  (cls.name != environment.name))
+
+
     def __repr__(self):
         s = "BlenderModel('{}', '{}', {})"
         return s.format(self.name, self.path, self.last_update)
@@ -73,12 +87,12 @@ def explore(resources):
     """
 
     updates = {r: path.getmtime(r) for r in resources if path.exists(r)}
-    query = BlenderModel.select().where(BlenderModel.path << resources)
+    query = BlenderModel.get_models_from_paths(resources)
 
-    resources_old = set(obj.path for obj in query
-                                 if obj.last_update == updates[obj.path] )
+    resources_old = set(model.path for model in query
+                                   if model.last_update == updates[model.path])
     resources_new = set(resources) - resources_old
-    models_old = [(obj.name, obj.path) for obj in query]
+    models_old = [(model.name, model.path) for model in query]
 
     if resources_new:
         command = EXPLORE_COMMAND.format(EXPLORE_SCRIPT, " ".join(resources_new))
@@ -99,13 +113,13 @@ def export(model_names):
     paths = []
     names = []
 
-    for obj in BlenderModel.select().where(BlenderModel.name << model_names):
-        resource = path.join(MORSEWEB_DATA, obj.name + ".json")
+    for model in BlenderModel.get_models_from_names(model_names):
+        resource = path.join(MORSEWEB_DATA, model.name + ".json")
 
         if (not path.isfile(resource)) or \
-           (obj.last_update > path.getmtime(resource)):
-            paths.append(obj.path)
-            names.append(obj.name)
+           (model.last_update > path.getmtime(resource)):
+            paths.append(model.path)
+            names.append(model.name)
 
     if paths:
         command = EXPORT_COMMAND.format(EXPORT_SCRIPT, " ".join(paths),

@@ -107,21 +107,19 @@ class AppSession(ApplicationSession):
         environment_name = basename(splitext(self.details["environment"])[0])
         environment = BlenderModel.get(name=environment_name)
 
-        environment_objects = BlenderModel.select().where(
-                                (BlenderModel.path == environment.path) &
-                                (BlenderModel.name != environment.name))
+        environment_models = BlenderModel.get_models_from_environment(environment)
+        environment_models = [model.name for model in environment_models]
 
-        environment_objects = [object.name for object in environment_objects]
-        all_objects = [name.split(".")[0].lower() for name in self.objects.keys()]
+        all_models = [name.split(".")[0].lower() for name in self.objects.keys()]
         robots = [robot["type"].lower() for robot in self.details["robots"]]
 
         # FIXME: This will remove a legitimate passive object if it shares
         # the same name with an object in the environment file. Until fixed,
         # make sure your passive object's names are unique.
-        objects = set(all_objects) - set(environment_objects) - set(self.robots)
-        model_names = robots + list(objects)
+        models = set(all_models) - set(environment_models) - set(self.robots)
+        model_names = robots + list(models)
 
-        models = BlenderModel.select().where(BlenderModel.name << model_names)
+        models = BlenderModel.get_models_from_names(model_names)
         self.passive_object_names = [model.name for model in models]
 
         autoexport.export(self.passive_object_names + [environment.name])
