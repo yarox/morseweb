@@ -10,6 +10,8 @@ from pymorse import Morse
 from json.decoder import JSONDecodeError
 from os.path import basename, splitext
 
+from autoexport import BlenderModel
+
 import autoexport
 
 
@@ -93,19 +95,35 @@ class AppSession(ApplicationSession):
         self.log.info("Exporting models. This operation may take a while.")
         autoexport.init()
 
-        robots = [r["type"].lower() for r in self.details["robots"]]
-        items = (set([k.split(".")[0].lower() for k in self.objects.keys()]) -
-                 set(self.robots))
+        # We have to export three different set of objects from the simulation:
+        # the scene, the robots, and the passive objects. We can get the scene
+        # and the robots easily from the simulation. But passive objects are
+        # a little more complicated to obtain. Here's how we do it:
+        # 1. Get all objects in the simulation
+        # 2. Remove the robots
+        # 3. Remove the objects from the environment file
+        # The remaining objects should be passive objects only.
 
-        model_names = robots + list(items)
-        environment = basename(splitext(self.details["environment"])[0])
-        scene = autoexport.BlenderModel.get(name=environment)
+        environment_name = basename(splitext(self.details["environment"])[0])
+        environment = BlenderModel.get(name=environment_name)
 
-        models = autoexport.BlenderModel.select().where(
-            (autoexport.BlenderModel.name << model_names) &
-            (autoexport.BlenderModel.path != scene.path))
+        environment_objects = BlenderModel.select().where(
+                                (BlenderModel.path == environment.path) &
+                                (BlenderModel.name != environment.name))
 
-        self.passive_object_names = [model.name for model in list(models) + [scene]]
-        autoexport.export(self.passive_object_names)
+        environment_objects = [object.name for object in environment_objects]
+        all_objects = [name.split(".")[0].lower() for name in self.objects.keys()]
+        robots = [robot["type"].lower() for robot in self.details["robots"]]
+
+        # FIXME: This will remove a legitimate passive object if it shares
+        # the same name with an object in the environment file. Until fixed,
+        # make sure your passive object's names are unique.
+        objects = set(all_objects) - set(environment_objects) - set(self.robots)
+        model_names = robots + list(objects)
+
+        models = BlenderModel.select().where(BlenderModel.name << model_names)
+        self.passive_object_names = [model.name for model in models]
+
+        autoexport.export(self.passive_object_names + [environment.name])
 
         self.log.info("Done exporting models.")
