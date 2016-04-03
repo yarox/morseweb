@@ -1,5 +1,7 @@
-from peewee import SqliteDatabase, Model, CharField, DateTimeField
+from peewee import SqliteDatabase
 from os import path, environ
+
+from models import BlenderModel
 
 import subprocess
 import logging
@@ -13,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 MORSEWEB_ROOT = path.realpath(__file__).rsplit("morseweb", 1)[0]
 
-MORSEWEB_DATA = path.join(path.dirname(MORSEWEB_ROOT), "morseweb/webapp/static/json")
+MORSEWEB_DATA = path.join(path.dirname(MORSEWEB_ROOT), "morseweb/static/json")
 MORSE_DATA = path.join(environ.get("MORSE_ROOT", "/"), "share/morse/data")
 
 RESOURCES = [MORSE_DATA] + environ.get("MORSE_RESOURCE_PATH", "").split(":")
@@ -25,44 +27,6 @@ EXPLORE_SCRIPT = path.join(MORSEWEB_ROOT, "utils/explore.py")
 
 EXPORT_COMMAND = "blender -b --addons io_three -P {} -- {} -n {} -o {} 2> /dev/null"
 EXPORT_SCRIPT = path.join(MORSEWEB_ROOT, "utils/export.py")
-
-DB = SqliteDatabase(path.join(MORSEWEB_ROOT, "blender-models.db"))
-
-
-class BlenderModel(Model):
-    name = CharField()
-    path = CharField()
-    last_update = DateTimeField()
-
-    @classmethod
-    def update_or_insert(cls, name, path, last_update):
-        defaults = {"last_update": last_update}
-        name = name.lower()
-
-        obj, _ = cls.get_or_create(name=name, path=path, defaults=defaults)
-        obj.last_update = last_update
-        obj.save()
-
-    @classmethod
-    def get_models_from_names(cls, names):
-        return cls.select().where(cls.name << names)
-
-    @classmethod
-    def get_models_from_paths(cls, paths):
-        return cls.select().where(cls.path << paths)
-
-    @classmethod
-    def get_models_from_environment(cls, environment):
-        return cls.select().where((cls.path == environment.path) &
-                                  (cls.name != environment.name))
-
-
-    def __repr__(self):
-        s = "BlenderModel('{}', '{}', {})"
-        return s.format(self.name, self.path, self.last_update)
-
-    class Meta:
-        database = DB
 
 
 def populate(pathname, is_recursive=True):
@@ -127,11 +91,12 @@ def export(model_names):
         subprocess.run(command, shell=True)
 
 
-def init():
-    DB.connect()
+def init(dbname="blender-models.db"):
+    db = SqliteDatabase(path.join(MORSEWEB_ROOT, dbname))
+    db.connect()
 
     if not BlenderModel.table_exists():
-        DB.create_table(BlenderModel)
+        db.create_table(BlenderModel)
 
     for pathname in RESOURCES:
         populate(pathname)

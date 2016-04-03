@@ -21,20 +21,25 @@
       </div>
 
       <div class="time">
-        <p>Simulation Time: <span id="simtime"></span></p>
-        <p>Real Time: <span id="realtime"></span></p>
-        <p>Real-time Factor: <span id="factor"></span></p>
+        <p>Simulation Time: <span id="simtime">00:00:00:00</span></p>
+        <p>Real Time: <span id="realtime">00:00:00:00</span></p>
+        <p>Real-time Factor: <span id="factor">1</span></p>
       </div>
     </div>
 
     <div id="container"></div>
 
-    <script src="https://autobahn.s3.amazonaws.com/autobahnjs/latest/autobahn.min.jgz"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r74/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/1.3.0/moment-duration-format.min.js"></script>
     <script src="{{ url_for('static', filename='js/EditorControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/morseweb.js') }}"></script>
+
+    <script>
+      startScene({{ scene_ready|tojson }}, {{ scene_url|tojson }});
+    </script>
 
   </body>
 </html>
