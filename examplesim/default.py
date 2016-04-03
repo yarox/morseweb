@@ -16,14 +16,14 @@ robot.add_default_interface("socket")
 # NOTE: you should set the name of the object exactly as the name of the model
 # you're loading.
 obj0 = PassiveObject("props/objects", "SmallTable")
+obj0.name = "SmallTable"
 obj0.translate(2, 2, 0)
 obj0.rotate(z=0)
-obj0.name = "SmallTable"
 
 obj1 = PassiveObject("props/objects", "SmallTable")
-obj1.translate(-2, -2, 0)
-obj1.rotate(z=0)
 obj1.name = "SmallTable"
+obj1.translate(-2, -2, 0)
+obj1.rotate(z=0.7)
 
 # Configure the environment
 env = Environment("empty", fastmode=True)
