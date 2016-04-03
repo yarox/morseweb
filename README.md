@@ -4,13 +4,23 @@ morseweb is a WebGL client for [MORSE](https://www.openrobots.org/morse/doc/stab
 
 # Dependencies
 + [MORSE](https://www.openrobots.org/morse/doc/stable/user/installation.html#manual-installation) **1.4**
-+ crossbar.io with Autobahn (for websockets related stuff)
++ [Redis](http://redis.io/topics/quickstart)
 + Xvfb and LLVMpipe (for launching MORSE in headless mode)
 
 # Instalation
 morseweb is installed on the server-side. Once the server is set up and running, clients can watch the simulation by accessing the server's URL on a web browser.
 
-Clone the repo wherever you want, and follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
+Clone the repo wherever you want and install the requirements.
+```
+$ pip install -r requirements.txt
+```
+
+If you are using [`virtualenv`](https://virtualenv.pypa.io/en/latest/) or [`conda`](http://conda.pydata.org/docs/index.html) you will have to make `pymorse` available to your environment.
+```
+$ ln -s /path/to/python/dist-packages/pymorse /path /to/your/environment/lib/python3.5/site-packages
+```
+
+Finally, follow [these](https://www.openrobots.org/morse/doc/latest/headless.html) instructions if you want to run MORSE in headless mode.
 
 # Launching the Simulation
 Import the `examplesim` simulation into MORSE
@@ -26,17 +36,19 @@ $ export MORSE_RESOURCE_PATH="/path/number/one:/path/number/two"
 ## Regular Mode
 Open two terminals. In the first one run:
 ```
+$ redis-server &
 $ multinode_server &
 $ morse run --name nodeA examplesim
 ```
 And in the second one:
 ```
-$ crossbar start --cbdir morseweb/.crossbar
+$ python runserver.py
 ```
 
 ## Headless Mode
 Open two terminals. In the first one run:
 ```
+$ redis-server &
 $ Xvfb -screen 0 100x100x24 :1 &
 $ multinode_server &
 $ export LD_LIBRARY_PATH=/path/to/mesa-11.0.7/build/linux-x86_64/gallium/targets/libgl-xlib
@@ -45,7 +57,7 @@ $ morse run --name nodeA examplesim
 ```
 And in the second one:
 ```
-$ crossbar start --cbdir morseweb/.crossbar
+$ python runserver.py
 ```
 
 # Watching the Simulation
