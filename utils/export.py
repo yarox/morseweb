@@ -19,8 +19,12 @@ def export_threejs(blend_file, json_file, object_name=None):
     bpy.ops.wm.open_mainfile(filepath=blend_file)
 
     if object_name is not None:
-        # Select the object and its children
+        # Select the object and its children and reset their location
         bpy.ops.object.select_pattern(pattern=object_name, extend=False)
+
+        for obj in bpy.context.selected_objects:
+            obj.location = (0, 0, 0)
+
         bpy.ops.object.select_hierarchy(direction="CHILD", extend=True)
 
         # Invert the selection and delete everything but the object passed as a
